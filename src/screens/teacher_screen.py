@@ -311,6 +311,15 @@ def teacher_screen_login():
     st.space()
     st.space()
 
+    # Check database status with diagnostic
+    from src.database.config import test_supabase_connection
+    is_connected, status_msg = test_supabase_connection()
+    if not is_connected:
+        st.error(f'🔴 {status_msg}')
+        st.info('Unable to login. Please verify:')
+        st.markdown('• Your internet connection is working')
+        st.markdown('• Supabase service is online')
+        st.markdown('• Your Supabase URL and API key are correct')
 
     teacher_username = st.text_input("Enter username", placeholder='ananyaroy')
 
@@ -322,13 +331,12 @@ def teacher_screen_login():
 
     with btnc1:
         if st.button('Login', icon=':material/passkey:', shortcut='control+enter', width='stretch'):
+            st.session_state['login_attempted'] = True
             if login_teacher(teacher_username, teacher_pass):
                 st.toast("welcome back!", icon="👋")
-                import time
-                time.sleep(1)
                 st.rerun()
             else:
-                st.error("Invalid username and password combo")
+                st.error("Invalid username and password combo or database offline")
 
     with btnc2:
         if st.button('Register Instead', type="primary", icon=':material/passkey:', width='stretch'):
@@ -387,8 +395,6 @@ def teacher_screen_register():
             success, message = register_teacher(teacher_username, teacher_name, teacher_pass, teacher_pass_confirm)
             if success:
                 st.success(message)
-                import time
-                time.sleep(2)
                 st.session_state.teacher_login_type = "login"
                 st.rerun()
             else:

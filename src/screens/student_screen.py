@@ -134,7 +134,6 @@ def student_screen():
                         st.session_state.user_role = 'student'
                         st.session_state.student_data = student
                         st.toast(f'Welcome Back {student['name']}')
-                        time.sleep(1)
                         st.rerun()
                 else:
                     st.info('Face not recognized! You might be a new student!')
@@ -175,7 +174,6 @@ def student_screen():
                                 st.session_state.user_role = 'student'
                                 st.session_state.student_data = response_data[0]
                                 st.toast(f'Profile Created! Hi {new_name}!')
-                                time.sleep(1)
                                 st.rerun()
                         else:
                             st.error('Couldnt capture your facial features for registration')
