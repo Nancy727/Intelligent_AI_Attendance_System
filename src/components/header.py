@@ -1,9 +1,17 @@
 import streamlit as st
+from PIL import Image
+import base64
+from io import BytesIO
 
 
 def header_home():
 
-    logo_url = "https://i.ibb.co/YTYGn5qV/logo.png"
+    # Load and convert image to base64
+    img = Image.open("asserts/image.png")
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    logo_url = f"data:image/png;base64,{img_str}"
     
     st.markdown(f"""
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:30px; margin-top:18px; padding:1.5rem 2rem; border:1px solid rgba(0,242,255,0.18); border-radius:1.6rem; background:rgba(255,255,255,0.03); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); box-shadow:0 0 28px rgba(0,242,255,0.08);">
@@ -16,7 +24,12 @@ def header_home():
 
 def header_dashboard():
 
-    logo_url = "https://i.ibb.co/YTYGn5qV/logo.png"
+    # Load and convert image to base64
+    img = Image.open("asserts/image.png")
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    logo_url = f"data:image/png;base64,{img_str}"
     
     st.markdown(f"""
         <div style="display:flex; align-items:center; justify-content:center; gap:12px; padding:1rem 1.25rem; border:1px solid rgba(0,242,255,0.18); border-radius:1.35rem; background:rgba(255,255,255,0.03); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); box-shadow:0 0 26px rgba(0,242,255,0.06);">
