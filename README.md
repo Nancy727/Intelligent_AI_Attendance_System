@@ -2,8 +2,6 @@
 
 GazeHum is a Streamlit-based attendance platform that combines face recognition, voice enrollment, and Supabase-backed persistence to support classroom attendance workflows. The project is structured for teacher and student journeys, with shareable class links and QR-based onboarding.
 
-Live app: [https://intelligentaiattendancesystem-fav7ycvbcme4zvjltrgjjx.streamlit.app](https://intelligentaiattendancesystem-fav7ycvbcme4zvjltrgjjx.streamlit.app)
-
 ## Key Capabilities
 
 - Separate student and teacher interfaces
@@ -76,11 +74,9 @@ streamlit run app.py
 
 ## Sharing Class Links
 
-Teachers can generate shareable class links and QR codes from the teacher flow. Links are built from `APP_BASE_URL` and the subject join code, for example:
+Teachers can generate shareable class links and QR codes from the teacher flow. Links are built from `APP_BASE_URL` and the subject join code
 
-```text
-https://intelligentaiattendancesystem-fav7ycvbcme4zvjltrgjjx.streamlit.app/?join-code=INT354
-```
+
 
 If you move the deployment to a new Streamlit app URL, update `APP_BASE_URL` so all new links point to the correct location.
 
