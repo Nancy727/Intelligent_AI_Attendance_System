@@ -53,21 +53,30 @@ def create_subject(subject_code, name, section, teacher_id):
     return _safe_execute(supabase.table("subjects").insert(data), default=[])
 
 def get_teacher_subjects(teacher_id):
+    # Fetch basic subjects first (without complex aggregations)
     subjects = _safe_execute(
-        supabase.table('subjects').select("*, subject_students(count), attendance_logs(timestamp)").eq("teacher_id", teacher_id),
+        supabase.table('subjects').select("*").eq("teacher_id", teacher_id),
         default=[]
     )
 
-
+    # Calculate totals separately
     for sub in subjects:
-        sub['total_students'] = sub.get("subject_students", [{}])[0].get('count', 0) if sub.get('subject_students') else 0
-        attendance = sub.get('attendance_logs', [])
-        unique_sessions = len(set(log['timestamp'] for log in attendance))
+        subject_id = sub['subject_id']
+        
+        # Get student count
+        students = _safe_execute(
+            supabase.table('subject_students').select('*').eq('subject_id', subject_id),
+            default=[]
+        )
+        sub['total_students'] = len(students)
+        
+        # Get unique attendance sessions
+        attendance = _safe_execute(
+            supabase.table('attendance_logs').select('recorded_at').eq('subject_id', subject_id),
+            default=[]
+        )
+        unique_sessions = len(set(log['recorded_at'] for log in attendance if log.get('recorded_at')))
         sub['total_classes'] = unique_sessions
-
-
-        sub.pop('subject_student', None)
-        sub.pop('attendance_logs', None)
 
     return subjects
 

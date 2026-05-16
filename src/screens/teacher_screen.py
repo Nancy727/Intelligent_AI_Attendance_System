@@ -180,7 +180,7 @@ def teacher_tab_take_attendance():
                         attendance_to_log.append({
                             'student_id': student['student_id'],
                             'subject_id': selected_subject_id,
-                            'timestamp': current_timestamp,
+                            'recorded_at': current_timestamp,
                             'is_present': bool(is_present)
                         })
 
@@ -216,21 +216,22 @@ def teacher_tab_manage_subjects():
     if subjects:
         for sub in subjects:
             stats = [
-                ("🫂", "Students", sub['total_students']),
-                ("🕰️", "Classes", sub['total_classes']),
+                ("🫂", "Students", sub.get('total_students', 0)),
+                ("🕰️", "Classes", sub.get('total_classes', 0)),
             ]
-        def share_btn():
-            if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}", icon=":material/share:"):
-                share_subject_dialog(sub['name'], sub['subject_code'])
-            st.space()
 
-        subject_card(
-            name = sub['name'],
-            code = sub['subject_code'],
-            section = sub['section'],
-            stats=stats,
-            footer_callback=share_btn
-        )
+            def share_btn(sub=sub):
+                if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}", icon=":material/share:"):
+                    share_subject_dialog(sub['name'], sub['subject_code'])
+                st.space()
+
+            subject_card(
+                name=sub['name'],
+                code=sub['subject_code'],
+                section=sub.get('section'),
+                stats=stats,
+                footer_callback=share_btn
+            )
     else:
         st.info("NO SUBJECTS FOUND. CREATE ONE ABOVE")
 
@@ -243,12 +244,13 @@ def teacher_tab_attendance_records():
     records = get_attendance_for_teacher(teacher_id)
 
     if not records:
+        st.info("No attendance records found. Take attendance using the 'Take Attendance' tab first.")
         return
     
     data = []
 
     for r in records:
-        ts = r.get('timestamp')
+        ts = r.get('recorded_at')
 
         data.append({
             "ts_group": ts.split(".")[0] if ts else None,

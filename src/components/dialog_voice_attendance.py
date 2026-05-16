@@ -59,7 +59,7 @@ def voice_attendance_dialog(selected_subject_id):
                 attendance_to_log.append({
                     'student_id': student['student_id'],
                     'subject_id': selected_subject_id,
-                    'timestamp': current_timestamp,
+                    'recorded_at': current_timestamp,
                     'is_present': bool(is_present)
                 })
             st.session_state.voice_attendance_results = (pd.DataFrame(results), attendance_to_log)
