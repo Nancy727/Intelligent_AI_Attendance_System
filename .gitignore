@@ -12,6 +12,7 @@ ENV/
 env/
 
 # Streamlit
+.teacher_session.json
 .streamlit/secrets.toml
 
 # Test and coverage

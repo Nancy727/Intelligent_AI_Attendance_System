@@ -5,7 +5,7 @@ from src.ui.base_layout import style_background_dashboard, style_base_layout
 from src.components.header import header_dashboard
 from src.components.footer import footer_dashboard
 from src.components.subject_card import subject_card
-from src.database.db import check_teacher_exists, create_teacher, teacher_login, get_teacher_subjects, get_attendance_for_teacher
+from src.database.db import check_teacher_exists, create_teacher, teacher_login, get_teacher_subjects, get_attendance_for_teacher, get_teacher_by_id
 from src.components.dialog_create_subject import create_subject_dialog
 from src.components.dialog_share_subject import share_subject_dialog
 from src.components.dialog_add_photo import add_photos_dialog
@@ -22,14 +22,125 @@ from src.database.config import supabase
 
 
 from src.components.dialog_voice_attendance import voice_attendance_dialog
+
+
+# Query param helpers for Streamlit compatibility across versions
+def _get_query_params():
+    try:
+        return st.experimental_get_query_params()
+    except Exception:
+        return {}
+
+
+def _set_query_params(**kwargs):
+    try:
+        # Streamlit expects values as lists (e.g. {'k': ['v']})
+        params = {k: (v if isinstance(v, list) else [v]) for k, v in kwargs.items()}
+        st.experimental_set_query_params(**params)
+    except Exception:
+        pass
+
+
+# Fallback file-based session persistence (local file) to survive refreshes
+def _session_file_path():
+    import os
+    return os.path.join(os.getcwd(), '.teacher_session.json')
+
+
+def _write_session_file(teacher_id, last_iso):
+    import json, os
+    try:
+        with open(_session_file_path(), 'w', encoding='utf-8') as f:
+            json.dump({'teacher_id': teacher_id, 'last': last_iso}, f)
+    except Exception:
+        pass
+
+
+def _read_session_file():
+    import json, os
+    try:
+        p = _session_file_path()
+        if not os.path.exists(p):
+            return None
+        with open(p, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _clear_session_file():
+    import os
+    try:
+        p = _session_file_path()
+        if os.path.exists(p):
+            os.remove(p)
+    except Exception:
+        pass
 def teacher_screen():
 
     style_background_dashboard()
     style_base_layout()
 
-    if "teacher_data" in st.session_state:
+    # Session persistence: keep teacher logged in for 30 minutes since last activity
+    now = datetime.now()
+    last_active_iso = st.session_state.get('teacher_last_active')
+    is_active = False
+    if 'teacher_data' in st.session_state and last_active_iso:
+        try:
+            last_active = datetime.fromisoformat(last_active_iso)
+            elapsed = (now - last_active).total_seconds()
+            if elapsed < 30 * 60:  # 30 minutes
+                is_active = True
+                # refresh last active timestamp on page load/activity
+                st.session_state['teacher_last_active'] = now.isoformat()
+        except Exception:
+            # malformed timestamp, force re-login
+            st.session_state.pop('teacher_last_active', None)
+
+    # If not in session_state, try restoring from URL query params: ?teacher=<id>&last=<iso>
+    if not is_active and 'teacher_data' not in st.session_state:
+        # Try restore from query params first
+        params = _get_query_params()
+        teacher_param = params.get('teacher')
+        last_param = params.get('last')
+        restored = False
+        if teacher_param and last_param:
+            try:
+                teacher_id = int(teacher_param[0])
+                last_iso = last_param[0]
+                last_dt = datetime.fromisoformat(last_iso)
+                elapsed = (now - last_dt).total_seconds()
+                if elapsed < 30 * 60:
+                    teacher = get_teacher_by_id(teacher_id)
+                    if teacher:
+                        st.session_state['teacher_data'] = teacher
+                        st.session_state['teacher_last_active'] = now.isoformat()
+                        is_active = True
+                        restored = True
+            except Exception:
+                pass
+
+        # Fallback: try file-based session persistence
+        if not restored:
+            sess = _read_session_file()
+            if sess:
+                try:
+                    teacher_id = int(sess.get('teacher_id'))
+                    last_iso = sess.get('last')
+                    last_dt = datetime.fromisoformat(last_iso)
+                    elapsed = (now - last_dt).total_seconds()
+                    if elapsed < 30 * 60:
+                        teacher = get_teacher_by_id(teacher_id)
+                        if teacher:
+                            st.session_state['teacher_data'] = teacher
+                            st.session_state['teacher_last_active'] = now.isoformat()
+                            is_active = True
+                except Exception:
+                    pass
+
+    if is_active:
         teacher_dashboard()
-    elif 'teacher_login_type' not in st.session_state or st.session_state.teacher_login_type=="login":
+    elif 'teacher_login_type' not in st.session_state or st.session_state.teacher_login_type == "login":
         teacher_screen_login()
     elif st.session_state.teacher_login_type == "register":
         teacher_screen_register()
@@ -47,7 +158,15 @@ def teacher_dashboard():
         st.subheader(f"""Welcome, {teacher_data['name']} """)
         if st.button("Logout", type='secondary', key='loginbackbtn', shortcut="control+backspace"):
             st.session_state['is_logged_in'] = False
-            del st.session_state.teacher_data 
+            st.session_state.pop('teacher_data', None)
+            st.session_state.pop('teacher_last_active', None)
+            # clear URL query params
+            try:
+                _set_query_params()
+            except Exception:
+                pass
+            # clear session file
+            _clear_session_file()
             st.rerun()
 
 
@@ -296,6 +415,19 @@ def login_teacher(username, password):
         st.session_state.user_role ='teacher'
         st.session_state.teacher_data = teacher
         st.session_state.is_logged_in = True
+        # set last active timestamp to keep session alive for 30 minutes
+        now_iso = datetime.now().isoformat()
+        st.session_state['teacher_last_active'] = now_iso
+        # persist via URL query params so refresh keeps session
+        try:
+            _set_query_params(teacher=str(teacher['teacher_id']), last=now_iso)
+        except Exception:
+            pass
+        # Also write to local session file as a reliable fallback
+        try:
+            _write_session_file(teacher['teacher_id'], now_iso)
+        except Exception:
+            pass
         return True
     
 

@@ -40,6 +40,13 @@ def teacher_login(username, password):
     return None
 
 
+def get_teacher_by_id(teacher_id):
+    res = _safe_execute(supabase.table('teachers').select('*').eq('teacher_id', int(teacher_id)), default=[])
+    if res:
+        return res[0]
+    return None
+
+
 def get_all_students():
     return _safe_execute(supabase.table('students').select("*"), default=[])
 
