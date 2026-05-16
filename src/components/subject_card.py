@@ -1,5 +1,5 @@
 import streamlit as st
-def subject_card(name, code, section, stats=None, footer_callback=None):
+def subject_card(name, code, section, stats=None):
     html = f"""
         <div style="background:rgba(18, 22, 32, 0.72); border-left: 8px solid #00F2FF; padding:25px; border-radius: 20px; border: 1px solid rgba(0, 242, 255, 0.18); margin-bottom:20px; box-shadow:0 0 30px rgba(0, 242, 255, 0.06); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);">
         <h3 style="margin:0; color: #F4FEFF; font-size: 1.5rem; letter-spacing:0.02em; ">{name}</h3>
@@ -17,6 +17,3 @@ def subject_card(name, code, section, stats=None, footer_callback=None):
         html+= "</div>"
 
     st.markdown(html, unsafe_allow_html=True)
-
-    if footer_callback:
-        footer_callback()

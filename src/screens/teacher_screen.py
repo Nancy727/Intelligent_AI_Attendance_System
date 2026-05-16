@@ -263,14 +263,15 @@ def teacher_tab_take_attendance():
 
                 for idx, img in enumerate(st.session_state.attendance_images):
                     img_np = np.array(img.convert('RGB'))
-                    detected, _, _ = predict_attendance(img_np)
-
+                    detected, _, _, liveness = predict_attendance(img_np, require_liveness=False, detector_upsample=2)
 
                     if detected:
-                        for sid in detected.keys():
+                        for sid, ok in detected.items():
                             student_id = int(sid)
-
-                            all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
+                            # only count if liveness passed
+                            passed = bool(ok)
+                            if passed:
+                                all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
 
                 enrolled_res = supabase.table('subject_students').select("*, students(*)").eq('subject_id',selected_subject_id ).execute()
                 enrolled_students = enrolled_res.data
@@ -339,18 +340,17 @@ def teacher_tab_manage_subjects():
                 ("🕰️", "Classes", sub.get('total_classes', 0)),
             ]
 
-            def share_btn(sub=sub):
-                if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}", icon=":material/share:"):
-                    share_subject_dialog(sub['name'], sub['subject_code'])
-                st.space()
-
             subject_card(
                 name=sub['name'],
                 code=sub['subject_code'],
                 section=sub.get('section'),
-                stats=stats,
-                footer_callback=share_btn
+                stats=stats
             )
+            
+            # Render share button directly in the main rendering path
+            if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_id']}", icon=":material/share:"):
+                share_subject_dialog(sub['name'], sub['subject_code'])
+            st.space()
     else:
         st.info("NO SUBJECTS FOUND. CREATE ONE ABOVE")
 

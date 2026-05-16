@@ -19,6 +19,6 @@ segno
 pillow
 
 
-
 librosa
 resemblyzer
+opencv-python

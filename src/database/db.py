@@ -1,5 +1,6 @@
 from src.database.config import supabase
 import bcrypt
+from datetime import datetime
 
 
 def _safe_execute(query, default=None):
@@ -66,8 +67,17 @@ def get_teacher_subjects(teacher_id):
         default=[]
     )
 
-    # Calculate totals separately
+    unique_subjects = []
+    seen_subject_ids = set()
     for sub in subjects:
+        subject_id = sub.get('subject_id')
+        if subject_id in seen_subject_ids:
+            continue
+        seen_subject_ids.add(subject_id)
+        unique_subjects.append(sub)
+
+    # Calculate totals separately
+    for sub in unique_subjects:
         subject_id = sub['subject_id']
         
         # Get student count
@@ -82,13 +92,27 @@ def get_teacher_subjects(teacher_id):
             supabase.table('attendance_logs').select('recorded_at').eq('subject_id', subject_id),
             default=[]
         )
-        unique_sessions = len(set(log['recorded_at'] for log in attendance if log.get('recorded_at')))
+        unique_sessions = len({
+            datetime.fromisoformat(log['recorded_at']).replace(minute=0, second=0, microsecond=0).isoformat()
+            for log in attendance
+            if log.get('recorded_at')
+        })
         sub['total_classes'] = unique_sessions
 
-    return subjects
+    return unique_subjects
 
 
 def  enroll_student_to_subject(student_id, subject_id):
+    existing = _safe_execute(
+        supabase.table('subject_students')
+        .select('subject_student_id')
+        .eq('student_id', student_id)
+        .eq('subject_id', subject_id),
+        default=[]
+    )
+    if existing:
+        return existing
+
     data = {'student_id': student_id, "subject_id": subject_id}
     return _safe_execute(supabase.table('subject_students').insert(data), default=[])
 
@@ -102,7 +126,19 @@ def  unenroll_student_to_subject(student_id, subject_id):
 
 
 def get_student_subjects(student_id):
-    return _safe_execute(supabase.table('subject_students').select('*, subjects(*)').eq('student_id', student_id), default=[])
+    rows = _safe_execute(supabase.table('subject_students').select('*, subjects(*)').eq('student_id', student_id), default=[])
+
+    unique_rows = []
+    seen_subject_ids = set()
+    for row in rows:
+        subject = row.get('subjects') or {}
+        subject_id = subject.get('subject_id')
+        if subject_id in seen_subject_ids:
+            continue
+        seen_subject_ids.add(subject_id)
+        unique_rows.append(row)
+
+    return unique_rows
 
 
 def get_student_attendance(student_id):
@@ -110,7 +146,53 @@ def get_student_attendance(student_id):
 
 
 def create_attendance(logs):
-    return _safe_execute(supabase.table('attendance_logs').insert(logs), default=[])
+    if not logs:
+        return []
+
+    unique_logs = []
+    seen_batch_keys = set()
+
+    for log in logs:
+        student_id = log.get('student_id')
+        subject_id = log.get('subject_id')
+        recorded_at = log.get('recorded_at')
+
+        if not student_id or not subject_id or not recorded_at:
+            continue
+
+        try:
+            ts = datetime.fromisoformat(recorded_at)
+        except Exception:
+            # If the timestamp is malformed, skip the row rather than inserting bad data.
+            continue
+
+        batch_key = (student_id, subject_id, ts.replace(minute=0, second=0, microsecond=0).isoformat())
+        if batch_key in seen_batch_keys:
+            continue
+        seen_batch_keys.add(batch_key)
+
+        hour_start = ts.replace(minute=0, second=0, microsecond=0)
+        hour_end = hour_start.replace(minute=59, second=59, microsecond=999999)
+
+        existing = _safe_execute(
+            supabase.table('attendance_logs')
+            .select('attendance_id')
+            .eq('student_id', student_id)
+            .eq('subject_id', subject_id)
+            .gte('recorded_at', hour_start.isoformat())
+            .lte('recorded_at', hour_end.isoformat()),
+            default=[]
+        )
+
+        if existing:
+            continue
+
+        unique_logs.append(log)
+
+    if not unique_logs:
+        return []
+
+    return _safe_execute(supabase.table('attendance_logs').insert(unique_logs), default=[])
 
 def get_attendance_for_teacher(teacher_id):
     return _safe_execute(supabase.table('attendance_logs').select("*, subjects!inner(*)").eq('subjects.teacher_id', teacher_id), default=[])
