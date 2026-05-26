@@ -1,3 +1,26 @@
 .streamlit/secrets.toml
 .env
 .env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db
