@@ -22,6 +22,27 @@ from src.database.config import supabase
 
 
 from src.components.dialog_voice_attendance import voice_attendance_dialog
+
+
+def render_teacher_skeletons(count=3):
+    cols = st.columns(3)
+    for index in range(count):
+        with cols[index % 3]:
+            st.markdown(
+                """
+                <div class="academic-card" style="margin-bottom: 1rem; min-height: 140px;">
+                    <div style="position:relative; z-index:1;">
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 32%; height: 1.2rem; margin-bottom: 0.85rem;"></div>
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 68%; height: 1.45rem; margin-bottom: 0.7rem;"></div>
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 48%; margin-bottom: 1rem;"></div>
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 100%; height: 2.6rem; border-radius: 14px;"></div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+
 def teacher_screen():
 
     style_background_dashboard()
@@ -40,7 +61,13 @@ def teacher_screen():
 
 def teacher_dashboard():
     teacher_data = st.session_state.teacher_data
+    teacher_loading_placeholder = st.empty()
+    with teacher_loading_placeholder.container():
+        render_teacher_skeletons()
+
     subjects_snapshot = get_teacher_subjects(teacher_data['teacher_id'])
+    teacher_loading_placeholder.empty()
+
     total_subjects = len(subjects_snapshot)
     total_students = sum(sub.get('total_students', 0) for sub in subjects_snapshot)
     total_classes = sum(sub.get('total_classes', 0) for sub in subjects_snapshot)
@@ -233,18 +260,18 @@ def teacher_tab_manage_subjects():
                 ("🫂", "Students", sub['total_students']),
                 ("🕰️", "Classes", sub['total_classes']),
             ]
-        def share_btn():
-            if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}"):
-                share_subject_dialog(sub['name'], sub['subject_code'])
-            st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+            def share_btn(sub=sub):
+                if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}", width='stretch'):
+                    share_subject_dialog(sub['name'], sub['subject_code'])
+                st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
 
-        subject_card(
-            name = sub['name'],
-            code = sub['subject_code'],
-            section = sub['section'],
-            stats=stats,
-            footer_callback=share_btn
-        )
+            subject_card(
+                name = sub['name'],
+                code = sub['subject_code'],
+                section = sub['section'],
+                stats=stats,
+                footer_callback=share_btn
+            )
     else:
         st.info("NO SUBJECTS FOUND. CREATE ONE ABOVE")
 

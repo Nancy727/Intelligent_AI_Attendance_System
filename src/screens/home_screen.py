@@ -10,6 +10,26 @@ def home_screen():
     style_base_layout()
 
     st.markdown(
+        """
+        <style>
+            div[data-testid="stVerticalBlock"]:has(.home-card-anchor-student),
+            div[data-testid="stVerticalBlock"]:has(.home-card-anchor-teacher) {
+                will-change: transform;
+                transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.home-card-anchor-student):hover,
+            div[data-testid="stVerticalBlock"]:has(.home-card-anchor-teacher):hover {
+                transform: translateY(-6px) scale(1.01);
+                box-shadow: 0 28px 60px rgba(15, 23, 42, 0.14) !important;
+                border-color: rgba(30, 64, 175, 0.22) !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
         "<p class='academic-muted' style='text-align:center; margin-top:0.5rem;'>Choose the portal that matches your role. The experience is optimized for focus, clarity, and fast access on laptops and tablets.</p>",
         unsafe_allow_html=True,
     )
@@ -20,6 +40,7 @@ def home_screen():
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
+        st.markdown("<div class='home-card-anchor-student'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown("<div class='academic-pill'>Student Portal</div>", unsafe_allow_html=True)
             st.image("https://i.ibb.co/844D9Lrt/mascot-student.png", width=120)
@@ -31,6 +52,7 @@ def home_screen():
                 st.rerun()
 
     with col2:
+        st.markdown("<div class='home-card-anchor-teacher'></div>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown("<div class='academic-pill'>Teacher Portal</div>", unsafe_allow_html=True)
             st.image("https://i.ibb.co/CsmQQV6X/mascot-prof.png", width=145)

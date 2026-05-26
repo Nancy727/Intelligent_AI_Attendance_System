@@ -14,6 +14,29 @@ import time
 from src.components.dialog_enroll import enroll_dialog
 from src.components.subject_card import subject_card
 
+
+def render_subject_skeletons(count=4):
+    cols = st.columns(2)
+    for index in range(count):
+        with cols[index % 2]:
+            st.markdown(
+                """
+                <div class="academic-card" style="margin-bottom: 1rem; min-height: 190px;">
+                    <div style="position:relative; z-index:1;">
+                        <div class="ui-skeleton ui-skeleton-chip" style="margin-bottom: 0.8rem;"></div>
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 62%; height: 1.25rem; margin-bottom: 0.75rem;"></div>
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 45%; margin-bottom: 1rem;"></div>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.9rem;">
+                            <div class="ui-skeleton ui-skeleton-line" style="width: 7rem;"></div>
+                            <div class="ui-skeleton ui-skeleton-line" style="width: 7.4rem;"></div>
+                        </div>
+                        <div class="ui-skeleton ui-skeleton-line" style="width: 100%; height: 2.8rem; border-radius: 14px;"></div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
 def student_dashboard():
     student_data = st.session_state.student_data
     student_id = student_data['student_id']
@@ -29,9 +52,15 @@ def student_dashboard():
                 del st.session_state.student_data 
                 st.rerun()
 
+    loading_placeholder = st.empty()
+    with loading_placeholder.container():
+        render_subject_skeletons()
+
     with st.spinner('Loading your enrolled subjects..'):
         subjects = get_student_subjects(student_id)
         logs = get_student_attendance(student_id)
+
+    loading_placeholder.empty()
 
     total_subjects = len(subjects)
     total_classes = len(logs)
@@ -152,7 +181,7 @@ def student_screen():
     if show_registration:
         with st.container(border=True):
             st.header('Register new Profile')
-            new_name = st.text_input("Enter your name", placeholder='E.g. Hamza Rizvi')
+            new_name = st.text_input("Enter your name", placeholder='E.g. Nancy kumari')
 
             st.subheader('Optional : Voice Enrollment')
             st.info("Enroll your for voice only attendance")
@@ -161,7 +190,7 @@ def student_screen():
             audio_data = None
 
             try:
-                audio_data = st.audio_input('Record a short phrase like I am present, My name is Akash.')
+                audio_data = st.audio_input('Record a short phrase like I am present, My name is Nancy kumari.')
             except Exception:
                 st.error('Audio Data failed!')
 
