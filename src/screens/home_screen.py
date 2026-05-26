@@ -26,7 +26,7 @@ def home_screen():
             st.subheader("I'm a Student")
             st.write("Check your attendance, enroll in subjects, and use face or voice login in a streamlined flow.")
             st.markdown("<ul class='academic-muted' style='padding-left: 1.1rem; margin-top: 0.75rem;'><li>Fast FaceID access</li><li>Subject enrollment in seconds</li><li>Attendance summaries at a glance</li></ul>", unsafe_allow_html=True)
-            if st.button('Open Student Portal', type='primary', icon=':material/arrow_outward:', icon_position='right', width='stretch'):
+            if st.button('Open Student Portal', type='primary', width='stretch'):
                 st.session_state['login_type']='student'
                 st.rerun()
 
@@ -37,7 +37,7 @@ def home_screen():
             st.subheader("I'm a Teacher")
             st.write("Create subjects, manage attendance, and review records from a clean classroom dashboard.")
             st.markdown("<ul class='academic-muted' style='padding-left: 1.1rem; margin-top: 0.75rem;'><li>Face and voice attendance workflows</li><li>Subject and enrollment management</li><li>Attendance records in one place</li></ul>", unsafe_allow_html=True)
-            if st.button('Open Teacher Portal', type='primary', icon=':material/arrow_outward:', icon_position='right', width='stretch'):
+            if st.button('Open Teacher Portal', type='primary', width='stretch'):
                 st.session_state['login_type']='teacher'
                 st.rerun()
 

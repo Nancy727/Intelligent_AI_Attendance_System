@@ -123,11 +123,25 @@ def style_base_layout():
             }
 
             div[data-testid="stButton"] > button {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 0.45rem !important;
+                min-height: 2.8rem !important;
                 border-radius: var(--academic-radius) !important;
                 border: 1px solid transparent !important;
                 padding: 0.8rem 1rem !important;
                 font-weight: 700 !important;
+                line-height: 1.2 !important;
+                white-space: normal !important;
+                text-align: center !important;
+                overflow-wrap: anywhere !important;
+                box-sizing: border-box !important;
                 transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+            }
+
+            div[data-testid="stButton"] {
+                margin-bottom: 0.25rem;
             }
 
             div[data-testid="stButton"] > button[kind="primary"] {
