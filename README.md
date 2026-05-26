@@ -73,7 +73,7 @@ The interface follows a consistent academic visual language defined in `src/ui/b
 
 ### Home
 
-![GazeHum home screen](assets/Screenshot%202026-05-15%20152619.png)
+![GazeHum home screen](assets/home.png)
 
 ## Core Capabilities
 
