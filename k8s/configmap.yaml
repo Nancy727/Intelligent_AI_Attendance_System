@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gazehum-config
+data:
+  # Streamlit runtime settings for containerized deployment.
+  STREAMLIT_SERVER_HEADLESS: "true"
+  STREAMLIT_SERVER_ENABLECORS: "false"
+  STREAMLIT_SERVER_PORT: "8501"
+  STREAMLIT_BROWSER_GATHERUSAGESTATS: "false"
+  PYTHONUNBUFFERED: "1"

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gazehum-deployment
+spec:
+  # Streamlit is stateful at the session layer and the app also uses RWO PVCs,
+  # so a single replica avoids volume contention and session routing issues.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gazehum
+  template:
+    metadata:
+      labels:
+        app: gazehum
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: gazehum
+          image: gazehum:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8501
+          envFrom:
+            - configMapRef:
+                name: gazehum-config
+            - secretRef:
+                name: gazehum-secrets
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          volumeMounts:
+            - name: models-volume
+              mountPath: /app/models
+            - name: data-volume
+              mountPath: /app/data
+            - name: logs-volume
+              mountPath: /app/logs
+          resources:
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+            requests:
+              cpu: "0.5"
+              memory: "1Gi"
+      volumes:
+        - name: models-volume
+          persistentVolumeClaim:
+            claimName: gazehum-models-pvc
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: gazehum-data-pvc
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: gazehum-logs-pvc

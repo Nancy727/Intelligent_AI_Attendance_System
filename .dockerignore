@@ -1,16 +1,47 @@
-.git
+.git/
 .gitignore
-.vscode
-.venv
-venv
-__pycache__
-*.pyc
-*.pyo
+.vscode/
+.idea/
+
+# Local Python environments and interpreter byproducts
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
 *.pyd
-.pytest_cache
-.mypy_cache
-.streamlit
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local secrets and environment files. The image should receive secrets at
+# runtime, not bake them into the build context.
 .env
 .env.*
+.streamlit/secrets.toml
+
+# Deployment and repo-only files that do not belong in the runtime image.
 Dockerfile
+docker-compose.yml
+k8s/
 README.md
+README.deploy.md
+supabase_schema.sql
+
+# Exclude mutable data, caches, and generated artifacts from the image.
+build/
+dist/
+*.egg-info/
+cache/
+logs/
+uploads/
+tmp/
+temp/
+data/
+datasets/
+models/
+model/
+*.sqlite3
+*.db
+*.log
